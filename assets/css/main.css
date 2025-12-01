@@ -23,6 +23,15 @@ article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;}
 
+.zoom {
+	transition: transform .25s;
+}
+
+.zoom:hover {
+	transform: scale(1.25);
+	filter: brightness(125%);
+}
+
 body {
 	line-height: 1;
 }
