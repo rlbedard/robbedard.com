@@ -184,6 +184,90 @@
 
 		}
 
+	// Burger menu.
+		(function() {
+
+			var $navToggle = $('#nav-toggle'),
+				$navDropdown = $('#nav-dropdown'),
+				$nav = $header.find('nav'),
+				navFullWidth = 0;
+
+			function syncBodyPadding() {
+				var h = $header[0].offsetHeight;
+				var hPx = h + 'px';
+				$body.css('padding-top', hPx);
+				$body.css('scroll-padding-top', hPx);
+				document.documentElement.style.setProperty('--header-height', hPx);
+				$('.main').css('scroll-margin-top', hPx);
+			}
+
+			// Sync immediately so the hero section sits flush below the header on first paint
+			syncBodyPadding();
+
+			// Measure nav's natural width; uses a hidden clone if nav is already collapsed.
+			function measureNavWidth() {
+				var ul = $nav.find('ul')[0];
+				if ($nav.css('display') !== 'none') {
+					return ul ? ul.offsetWidth : 0;
+				}
+				var $clone = $nav.clone().css({
+					position: 'fixed',
+					visibility: 'hidden',
+					display: 'block',
+					top: '-9999px',
+					left: '-9999px',
+					'white-space': 'nowrap'
+				}).appendTo('body');
+				var w = $clone.find('ul')[0].offsetWidth;
+				$clone.remove();
+				return w;
+			}
+
+			function checkNavCollapse() {
+				var needed = navFullWidth + 32; // 32px breathing room
+				if (needed > $header[0].offsetWidth) {
+					$header.addClass('nav-collapsed');
+					$navToggle.attr('aria-expanded', $navDropdown.hasClass('open') ? 'true' : 'false');
+					$navDropdown.attr('aria-hidden', $navDropdown.hasClass('open') ? 'false' : 'true');
+				} else {
+					$header.removeClass('nav-collapsed');
+					$navDropdown.removeClass('open').attr('aria-hidden', 'true');
+					$navToggle.attr('aria-expanded', 'false');
+				}
+			}
+
+			$window.on('load', function() {
+				navFullWidth = measureNavWidth();
+				checkNavCollapse();
+				syncBodyPadding();
+			});
+
+			$window.on('resize.burger', function() {
+				checkNavCollapse();
+				syncBodyPadding();
+			});
+
+			$navToggle.on('click', function(e) {
+				e.stopPropagation();
+				var opening = !$navDropdown.hasClass('open');
+				$navDropdown.toggleClass('open').attr('aria-hidden', opening ? 'false' : 'true');
+				$navToggle.attr('aria-expanded', opening ? 'true' : 'false');
+			});
+
+			$(document).on('click.burger', function(e) {
+				if (!$(e.target).closest('#nav-dropdown, #nav-toggle').length) {
+					$navDropdown.removeClass('open').attr('aria-hidden', 'true');
+					$navToggle.attr('aria-expanded', 'false');
+				}
+			});
+
+			$navDropdown.find('a').on('click', function() {
+				$navDropdown.removeClass('open').attr('aria-hidden', 'true');
+				$navToggle.attr('aria-expanded', 'false');
+			});
+
+		})();
+
 	// Events.
 		var resizeTimeout, resizeScrollTimeout;
 
@@ -200,7 +284,7 @@
 					// Update scrolly links.
 						$('a[href^="#"]').scrolly({
 							speed: 1500,
-							offset: $header.outerHeight() - 1
+							offset: $header.outerHeight()
 						});
 
 					// Re-enable animations/transitions.
